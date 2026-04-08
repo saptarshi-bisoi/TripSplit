@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
@@ -98,15 +100,15 @@ const LandingPage = () => {
 
         {/* PARTNER LOGOS */}
         <section className="w-full border-y border-gray-200 bg-white/50 backdrop-blur-sm py-10 mt-10">
-          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between transition duration-500">
+          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between opacity-50 grayscale hover:grayscale-0 transition duration-500">
             <div className="text-sm font-bold text-slate-800 uppercase tracking-widest max-w-[200px] mb-6 md:mb-0">
-              Perfect for tracking expenses across
+              More than 100+ groups trust us
             </div>
-            <div className="flex flex-wrap justify-center gap-10 text-2xl text-slate-700">
-              <span className="flex items-center space-x-2 font-bold"><i className="fa-solid fa-plane-departure text-[#00786f]"></i> <span>Vacations</span></span>
-              <span className="flex items-center space-x-2 font-bold"><i className="fa-solid fa-house-user text-indigo-500"></i> <span>Roommates</span></span>
-              <span className="flex items-center space-x-2 font-bold"><i className="fa-solid fa-pizza-slice text-orange-500"></i> <span>Dinners</span></span>
-              <span className="flex items-center space-x-2 font-bold"><i className="fa-solid fa-car text-rose-500"></i> <span>Roadtrips</span></span>
+            <div className="flex flex-wrap justify-center gap-10 text-3xl text-slate-900">
+              <span className="flex items-center space-x-2 font-bold"><i className="fa-brands fa-hubspot text-[#ff7a59]"></i> <span>HubSpot</span></span>
+              <span className="flex items-center space-x-2 font-bold"><i className="fa-brands fa-dropbox text-[#0061ff]"></i> <span>Dropbox</span></span>
+              <span className="flex items-center space-x-2 font-bold"><i className="fa-brands fa-square-font-awesome text-gray-800"></i> <span>Square</span></span>
+              <span className="flex items-center space-x-2 font-bold"><i className="fa-brands fa-intercom text-[#286efa]"></i> <span className="uppercase tracking-tighter">Intercom</span></span>
             </div>
           </div>
         </section>
@@ -118,10 +120,10 @@ const LandingPage = () => {
               <i className="fa-solid fa-border-all"></i> <span>Features</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight max-w-3xl mx-auto">
-              Everything you need to stop arguing over money
+              Latest advanced technologies to ensure everything you need
             </h2>
             <p className="text-lg text-slate-500 max-w-2xl mx-auto">
-              Say goodbye to complex spreadsheets and awkward IOUs. Track shared expenses easily so everyone gets paid back.
+              Maximize your group's harmony and financial security with our highly-affordable, user-friendly expense management system.
             </p>
           </div>
 
@@ -130,9 +132,9 @@ const LandingPage = () => {
             {/* Feature 1: Dynamic Dashboard (Takes 2 Columns on Large Screens) */}
             <div className="lg:col-span-2 bg-[#f8fafc] border border-gray-200 rounded-3xl p-8 lg:p-12 flex flex-col md:flex-row justify-between relative overflow-hidden transition hover:shadow-xl hover:border-teal-200">
               <div className="max-w-xs z-10">
-                <h3 className="text-3xl font-bold text-slate-900 mb-4">Visual trip breakdowns</h3>
+                <h3 className="text-3xl font-bold text-slate-900 mb-4">Dynamic dashboard</h3>
                 <p className="text-slate-500 mb-8 leading-relaxed">
-                  Instantly see where your group's money went. Our simple dashboard breaks down exactly who paid for what, so there's never any confusion.
+                  TripSplit helps friend groups work faster, smarter, and with complete visibility, mitigating risk and ensuring total compliance on group vacations.
                 </p>
                 <button className="bg-[#00786f] text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-[#005c55] transition">Explore all</button>
               </div>
@@ -150,7 +152,7 @@ const LandingPage = () => {
                 <div className="flex-1 flex items-end justify-between space-x-2 pt-4">
                   {/* Fake bars */}
                   {[3, 6, 4, 10, 5, 8, 3, 4, 7, 2].map((height, i) => (
-                      <div key={i} className={`w-full rounded-t-sm ${height === 10 ? 'bg-[#00786f]' : 'bg-gray-200'}`} style={{height: `${height * 10}%`}}></div>
+                      <div key={i} className={\`w-full rounded-t-sm \${height === 10 ? 'bg-[#00786f]' : 'bg-gray-200'}\`} style={{height: \`\${height * 10}%\`}}></div>
                   ))}
                 </div>
               </div>
@@ -158,9 +160,9 @@ const LandingPage = () => {
 
             {/* Feature 2: Smart Notifications */}
             <div className="bg-[#f8fafc] border border-gray-200 rounded-3xl p-8 flex flex-col relative overflow-hidden transition hover:shadow-xl hover:border-teal-200">
-               <h3 className="text-2xl font-bold text-slate-900 mb-4 mix-blend-multiply">Gentle reminders</h3>
+               <h3 className="text-2xl font-bold text-slate-900 mb-4 mix-blend-multiply">Smart notifications</h3>
                <p className="text-slate-500 mb-8 leading-relaxed mix-blend-multiply">
-                 No more awkward texts asking for money. We send gentle email reminders so everyone pays up on time.
+                 Easily accessible alerts from the notification center, calendar, or email with relevant pending debts.
                </p>
                {/* Fake UI: Toggles */}
                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex-1 flex flex-col divide-y divide-gray-100">
@@ -188,9 +190,9 @@ const LandingPage = () => {
                 
                 {/* Visual Block for Task Management */}
                 <div className="lg:col-span-1 border border-gray-200 bg-white rounded-3xl p-8 flex flex-col justify-center text-center">
-                   <h3 className="text-3xl font-bold text-slate-900 mb-4">Keep track together</h3>
+                   <h3 className="text-3xl font-bold text-slate-900 mb-4">Real-time Activity</h3>
                    <p className="text-slate-500 leading-relaxed">
-                     Upload receipts, add quick notes, and keep all your group's spending history organized in one simple, centralized feed.
+                     Discuss specific expenses, manage receipts, secure approvals, and track total net group balance directly inside the unified workspace.
                    </p>
                 </div>
 
@@ -261,15 +263,15 @@ const LandingPage = () => {
             {/* Huge Stats Row */}
             <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-10 bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-12 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)]">
                <div className="flex flex-col items-center justify-center transition hover:-translate-y-1">
-                  <span className="text-6xl font-extrabold mb-2 text-[#ccfbf1]">2026</span>
+                  <span className="text-6xl font-extrabold mb-2 text-[#ccfbf1]">2024</span>
                   <span className="text-lg text-teal-100 font-semibold">TripSplit Founded</span>
                </div>
                <div className="flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-white/20 pt-10 md:pt-0 transition hover:-translate-y-1">
-                  <span className="text-6xl font-extrabold mb-2 text-[#ccfbf1]">50+</span>
+                  <span className="text-6xl font-extrabold mb-2 text-[#ccfbf1]">50K+</span>
                   <span className="text-lg text-teal-100 font-semibold">Active Users</span>
                </div>
                <div className="flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-white/20 pt-10 md:pt-0 transition hover:-translate-y-1">
-                  <span className="text-6xl font-extrabold mb-2 text-[#ccfbf1]">800+</span>
+                  <span className="text-6xl font-extrabold mb-2 text-[#ccfbf1]">1M+</span>
                   <span className="text-lg text-teal-100 font-semibold">Expenses Logged</span>
                </div>
             </div>
@@ -283,3 +285,7 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
+`;
+
+fs.writeFileSync('client/src/components/LandingPage.jsx', code);
+console.log('Landing page successfully overwritten with purely Teal SaaS structure!');
