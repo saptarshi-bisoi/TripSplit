@@ -25,7 +25,7 @@ const TripView = () => {
 
   const fetchTripData = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/trips/${tripId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips/${tripId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (response.ok) {
@@ -50,7 +50,7 @@ const TripView = () => {
     }
 
     try {
-      await fetch(`http://localhost:5000/api/trips/${tripId}/members`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips/${tripId}/members`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ const TripView = () => {
         return;
     }
     try {
-      await fetch(`http://localhost:5000/api/trips/${tripId}/members`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips/${tripId}/members`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ const TripView = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/trips/${tripId}/expenses`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips/${tripId}/expenses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ const TripView = () => {
 
   const handleDeleteExpense = async (expenseId) => {
     try {
-      await fetch(`http://localhost:5000/api/trips/${tripId}/expenses/${expenseId}`, {
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips/${tripId}/expenses/${expenseId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

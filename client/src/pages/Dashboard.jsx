@@ -19,7 +19,7 @@ const Dashboard = () => {
 
     const fetchTrips = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/trips', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
@@ -38,7 +38,7 @@ const Dashboard = () => {
     if (!name) return;
 
     try {
-      const response = await fetch('http://localhost:5000/api/trips', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
