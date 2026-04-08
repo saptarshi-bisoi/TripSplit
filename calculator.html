@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Split Calculator - TripSplit</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: {
+                            700: '#1E8282'
+                        },
+                        slate: {
+                            900: '#111827'
+                        },
+                        gray: {
+                            600: '#4B5563'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-600 antialiased min-h-screen py-10">
+
+    <div class="max-w-4xl mx-auto px-6">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4">
+                <span class="text-teal-700">Expense Split</span> <span class="text-slate-900">Calculator</span>
+            </h1>
+            <p class="text-lg max-w-2xl mx-auto">
+                Add friends, log expenses, and see exactly who owes whom. Supports equal and custom splits!
+            </p>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <!-- Left Column: Inputs -->
+            <div class="space-y-8">
+
+                <!-- Add Friend Card -->
+                <div class="bg-white border border-gray-100 rounded-lg p-6 shadow-md transition">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <i class="fa-solid fa-user-plus text-teal-700 mr-3"></i> Add Friend
+                    </h2>
+                    <div class="flex space-x-3">
+                        <input type="text" id="friendName" placeholder="Enter friend's name"
+                            class="flex-1 border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-teal-700 transition"
+                            onkeypress="if(event.key === 'Enter') handleAddFriend()">
+                        <button onclick="handleAddFriend()"
+                            class="bg-teal-700 text-white font-bold px-6 py-2 rounded-lg shadow-md hover:bg-[#156868] transition transform active:scale-95">
+                            Add
+                        </button>
+                    </div>
+                    <!-- Friends List -->
+                    <div id="friendsList" class="flex flex-wrap gap-2 mt-4">
+                        <!-- Friends will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Add Expense Card -->
+                <div class="bg-white border border-gray-100 rounded-lg p-6 shadow-md transition relative">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <i class="fa-solid fa-receipt text-teal-700 mr-3"></i> Add Expense
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-500 mb-1">Description</label>
+                            <input type="text" id="expenseDesc" placeholder="e.g. Hotel, Dinner"
+                                class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-teal-700 transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-500 mb-1">Total Amount (₹)</label>
+                            <input type="number" id="expenseAmount" placeholder="0.00" oninput="validateExpenseForm()"
+                                class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-teal-700 transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-500 mb-1">Who Paid?</label>
+                            <select id="expensePayer" onchange="validateExpenseForm()"
+                                class="w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-teal-700 transition bg-white disabled:bg-gray-100"
+                                disabled>
+                                <option value="">Add friends first...</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-semibold text-gray-500">Split Method</label>
+                                <div id="expenseError" class="h-4"></div>
+                            </div>
+
+                            <div class="flex space-x-2 mb-3 w-full border-b border-gray-200">
+                                <button id="tabEqual" onclick="setSplitMode('equal')"
+                                    class="flex-1 py-2 px-3 text-sm font-bold text-teal-700 border-b-2 border-teal-700 transition">Split
+                                    Equally</button>
+                                <button id="tabExact" onclick="setSplitMode('exact')"
+                                    class="flex-1 py-2 px-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition">Split
+                                    Unequally</button>
+                            </div>
+
+                            <div id="involvedContainer"
+                                class="bg-gray-50 p-4 rounded-lg border border-gray-100 max-h-48 overflow-y-auto space-y-2">
+                                <p class="text-sm text-gray-400 italic">Add friends to setup split.</p>
+                            </div>
+                        </div>
+
+                        <button id="submitExpenseBtn" onclick="handleAddExpense()"
+                            class="w-full bg-teal-700 text-white font-bold py-3 rounded-lg shadow-md hover:bg-[#156868] transition transform active:scale-95 mt-2 opacity-50 cursor-not-allowed"
+                            disabled>
+                            Add Expense
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Outputs -->
+            <div class="space-y-8">
+
+                <!-- Settlement Summary Card -->
+                <div class="bg-white border border-gray-100 rounded-lg p-6 shadow-md transition">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <i class="fa-solid fa-handshake-angle text-teal-700 mr-3"></i> Settlement Summary
+                    </h2>
+                    <div id="settlementList" class="space-y-3">
+                        <div class="text-center py-8 text-gray-400 italic">
+                            No expenses added yet.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expense History Card -->
+                <div class="bg-white border border-gray-100 rounded-lg p-6 shadow-md transition">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left text-teal-700 mr-3"></i> Recent Expenses
+                    </h2>
+                    <div id="expenseHistory" class="space-y-3 max-h-60 overflow-y-auto pr-2">
+                        <div class="text-center py-4 text-gray-400 italic">
+                            No history.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const friends = [];
+        const expenses = [];
+        let splitMode = 'equal'; // 'equal' or 'exact'
+
+        function handleAddFriend() {
+            const input = document.getElementById('friendName');
+            const name = input.value.trim();
+
+            if (name === "") return;
+            if (friends.includes(name)) {
+                alert("Friend already added!");
+                return;
+            }
+
+            friends.push(name);
+            input.value = "";
+
+            updateFriendsUI();
+            calculateSettlements();
+            validateExpenseForm();
+        }
+
+        function removeFriend(index) {
+            const name = friends[index];
+            const isInvolved = expenses.some(e => e.payer === name || e.shares.hasOwnProperty(name));
+            if (isInvolved) {
+                alert("Cannot remove. This friend is involved in an expense.");
+                return;
+            }
+            friends.splice(index, 1);
+            updateFriendsUI();
+            validateExpenseForm();
+        }
+
+        function setSplitMode(mode) {
+            splitMode = mode;
+            const tabEqual = document.getElementById('tabEqual');
+            const tabExact = document.getElementById('tabExact');
+
+            if (mode === 'equal') {
+                tabEqual.className = "flex-1 py-2 px-3 text-sm font-bold text-teal-700 border-b-2 border-teal-700 transition";
+                tabExact.className = "flex-1 py-2 px-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition";
+            } else {
+                tabExact.className = "flex-1 py-2 px-3 text-sm font-bold text-teal-700 border-b-2 border-teal-700 transition";
+                tabEqual.className = "flex-1 py-2 px-3 text-sm font-bold text-gray-400 border-b-2 border-transparent hover:text-gray-600 transition";
+            }
+
+            updateFriendsUI();
+            validateExpenseForm();
+        }
+
+        function validateExpenseForm() {
+            const amountVal = parseFloat(document.getElementById('expenseAmount').value) || 0;
+            const payer = document.getElementById('expensePayer').value;
+            const btn = document.getElementById('submitExpenseBtn');
+            const errorDiv = document.getElementById('expenseError');
+
+            // Initial setup
+            errorDiv.innerHTML = '';
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            if (friends.length === 0) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            if (amountVal <= 0) {
+                errorDiv.innerHTML = '<span class="text-xs text-red-500 font-medium">Enter valid amount</span>';
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                // Continue below just to update UI summaries if they are trying to type
+            }
+
+            if (!payer) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            if (splitMode === 'equal') {
+                const checked = document.querySelectorAll('input[name="involvedFriend"]:checked').length;
+                const summaryNode = document.getElementById('equalSplitSummary');
+
+                if (checked === 0) {
+                    if (amountVal > 0) errorDiv.innerHTML = '<span class="text-xs text-red-500 font-medium">Select someone</span>';
+                    if (summaryNode) summaryNode.innerHTML = '';
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    if (amountVal > 0) {
+                        const split = (amountVal / checked).toFixed(2);
+                        if (summaryNode) summaryNode.innerHTML = `<span class="text-sm font-semibold text-teal-700 px-2 py-1 bg-teal-50 rounded border border-teal-100">₹${split} per person</span>`;
+                    } else {
+                        if (summaryNode) summaryNode.innerHTML = '';
+                    }
+                }
+            } else {
+                let sum = 0;
+                friends.forEach(f => {
+                    const node = document.getElementById('exact_' + f);
+                    if (node) sum += (parseFloat(node.value) || 0);
+                });
+
+                const summaryNode = document.getElementById('exactSplitSummary');
+
+                if (amountVal > 0) {
+                    const diff = Math.abs(sum - amountVal);
+                    const remaining = amountVal - sum;
+
+                    if (diff > 0.01 && remaining > 0) {
+                        if (summaryNode) summaryNode.innerHTML = `<span class="text-sm font-medium text-amber-600">Remaining: <span class="font-bold">₹${remaining.toFixed(2)}</span></span>`;
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    } else if (diff > 0.01 && remaining < 0) {
+                        if (summaryNode) summaryNode.innerHTML = `<span class="text-sm font-medium text-red-500">Over total by: <span class="font-bold">₹${Math.abs(remaining).toFixed(2)}</span></span>`;
+                        errorDiv.innerHTML = '<span class="text-xs text-red-500 font-medium">Amounts exceed total</span>';
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        if (summaryNode) summaryNode.innerHTML = `<span class="text-sm font-semibold text-teal-700 px-2 py-1 bg-teal-50 rounded border border-teal-100"><i class="fa-solid fa-check mr-1"></i>Match!</span>`;
+                    }
+                } else {
+                    if (summaryNode) summaryNode.innerHTML = '';
+                }
+            }
+        }
+
+        function handleAddExpense() {
+            const descInput = document.getElementById('expenseDesc');
+            const amountInput = document.getElementById('expenseAmount');
+            const payerSelect = document.getElementById('expensePayer');
+            const btn = document.getElementById('submitExpenseBtn');
+
+            if (btn.disabled) return; // double check
+
+            const desc = descInput.value.trim() || 'Untitled Expense';
+            const totalAmount = parseFloat(amountInput.value);
+            const payer = payerSelect.value;
+            const shares = {};
+
+            if (splitMode === 'equal') {
+                const checkboxes = document.querySelectorAll('input[name="involvedFriend"]:checked');
+                const involvedNames = Array.from(checkboxes).map(cb => cb.value);
+                const splitAmount = totalAmount / involvedNames.length;
+                involvedNames.forEach(name => shares[name] = splitAmount);
+            } else {
+                friends.forEach(f => {
+                    const node = document.getElementById('exact_' + f);
+                    const val = parseFloat(node.value) || 0;
+                    if (val > 0) shares[f] = val;
+                });
+            }
+
+            expenses.push({
+                id: Date.now(),
+                description: desc,
+                amount: totalAmount,
+                payer: payer,
+                shares: shares
+            });
+
+            // Reset
+            descInput.value = "";
+            amountInput.value = "";
+
+            if (splitMode === 'equal') {
+                const checkboxes = document.querySelectorAll('input[name="involvedFriend"]');
+                checkboxes.forEach(cb => cb.checked = false);
+            } else {
+                friends.forEach(f => {
+                    const node = document.getElementById('exact_' + f);
+                    if (node) node.value = "";
+                });
+            }
+
+            updateExpensesUI();
+            calculateSettlements();
+            validateExpenseForm(); // re-runs validation to reset button state
+        }
+
+        function removeExpense(id) {
+            const index = expenses.findIndex(e => e.id === id);
+            if (index > -1) {
+                expenses.splice(index, 1);
+                updateExpensesUI();
+                calculateSettlements();
+            }
+        }
+
+        function updateFriendsUI() {
+            // Tags
+            const list = document.getElementById('friendsList');
+            list.innerHTML = friends.map((f, i) => `
+            <span class="inline-flex items-center bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1 rounded-full text-sm font-medium shadow-sm">
+                ${f}
+                <button onclick="removeFriend(${i})" class="ml-2 text-teal-500 hover:text-teal-800 transition"><i class="fa-solid fa-xmark mt-0.5"></i></button>
+            </span>
+        `).join('');
+
+            // Payer Select
+            const select = document.getElementById('expensePayer');
+            if (friends.length === 0) {
+                select.innerHTML = '<option value="">Add friends first...</option>';
+                select.disabled = true;
+            } else {
+                const currentVal = select.value;
+                select.innerHTML = '<option value="" disabled selected>Select friend</option>' +
+                    friends.map(f => `<option value="${f}">${f}</option>`).join('');
+                if (friends.includes(currentVal)) {
+                    select.value = currentVal;
+                }
+                select.disabled = false;
+            }
+
+            // Involved Container based on split mode
+            const invContainer = document.getElementById('involvedContainer');
+            if (friends.length === 0) {
+                invContainer.innerHTML = '<p class="text-sm text-gray-400 italic">Add friends to setup split.</p>';
+            } else {
+                if (splitMode === 'equal') {
+                    let html = friends.map(f => `
+                    <label class="flex items-center space-x-3 p-2 rounded hover:bg-gray-100 transition cursor-pointer">
+                        <input type="checkbox" name="involvedFriend" value="${f}" onchange="validateExpenseForm()" class="w-4 h-4 text-teal-700 bg-gray-100 border-gray-300 rounded focus:ring-teal-700 focus:ring-2">
+                        <span class="text-sm font-medium text-slate-700">${f}</span>
+                    </label>
+                `).join('');
+                    html += '<div id="equalSplitSummary" class="mt-3 text-right h-6"></div>';
+                    invContainer.innerHTML = html;
+                } else {
+                    // Exact amounts inputs
+                    let html = friends.map(f => `
+                    <div class="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded transition">
+                        <span class="text-sm font-medium text-slate-700 w-24 truncate">${f}</span>
+                        <div class="relative flex-1">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-sm">₹</span>
+                            <input type="number" id="exact_${f}" placeholder="0.00" oninput="validateExpenseForm()" class="pl-8 w-full border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-teal-700 text-sm bg-white">
+                        </div>
+                    </div>
+                `).join('');
+                    html += '<div id="exactSplitSummary" class="mt-3 text-right h-6"></div>';
+                    invContainer.innerHTML = html;
+                }
+            }
+        }
+
+        function updateExpensesUI() {
+            const historyContainer = document.getElementById('expenseHistory');
+
+            if (expenses.length === 0) {
+                historyContainer.innerHTML = '<div class="text-center py-4 text-gray-400 italic">No history.</div>';
+                return;
+            }
+
+            historyContainer.innerHTML = [...expenses].reverse().map(e => `
+            <div class="flex justify-between items-start bg-gray-50 border border-gray-100 p-3 rounded-lg group hover:border-teal-200 transition mb-3">
+                <div>
+                    <h4 class="font-bold text-slate-900">${e.description}</h4>
+                    <p class="text-xs text-gray-500">${e.payer} paid ₹${e.amount.toFixed(2)}</p>
+                </div>
+                <div class="flex flex-col items-end">
+                    <button onclick="removeExpense(${e.id})" class="text-gray-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100 mb-1" title="Delete Expense">
+                        <i class="fa-solid fa-trash text-sm"></i>
+                    </button>
+                    <span class="font-bold text-teal-700">₹${e.amount.toFixed(2)}</span>
+                </div>
+            </div>
+        `).join('');
+        }
+
+        function calculateSettlements() {
+            const balances = {};
+
+            friends.forEach(f => balances[f] = 0);
+
+            expenses.forEach(e => {
+                if (!balances.hasOwnProperty(e.payer)) balances[e.payer] = 0;
+                balances[e.payer] += e.amount;
+
+                for (const [person, shareAmount] of Object.entries(e.shares)) {
+                    if (!balances.hasOwnProperty(person)) balances[person] = 0;
+                    balances[person] -= shareAmount;
+                }
+            });
+
+            const creditors = [];
+            const debtors = [];
+
+            for (const [person, balance] of Object.entries(balances)) {
+                if (balance > 0.01) creditors.push({ person, amount: balance });
+                else if (balance < -0.01) debtors.push({ person, amount: Math.abs(balance) });
+            }
+
+            creditors.sort((a, b) => b.amount - a.amount);
+            debtors.sort((a, b) => b.amount - a.amount);
+
+            const settlements = [];
+            let c = 0;
+            let d = 0;
+
+            while (c < creditors.length && d < debtors.length) {
+                const creditor = creditors[c];
+                const debtor = debtors[d];
+
+                const settleAmount = Math.min(creditor.amount, debtor.amount);
+
+                if (settleAmount > 0.01) {
+                    settlements.push({
+                        from: debtor.person,
+                        to: creditor.person,
+                        amount: settleAmount
+                    });
+                }
+
+                creditor.amount -= settleAmount;
+                debtor.amount -= settleAmount;
+
+                if (creditor.amount < 0.01) c++;
+                if (debtor.amount < 0.01) d++;
+            }
+
+            renderSettlements(settlements);
+        }
+
+        function renderSettlements(settlements) {
+            const container = document.getElementById('settlementList');
+
+            if (friends.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400 italic">Add friends and expenses to calculate settlements.</div>';
+                return;
+            }
+
+            if (expenses.length === 0) {
+                container.innerHTML = '<div class="text-center py-8 text-gray-400 italic">No expenses yet. Everyone is settled up!</div>';
+                return;
+            }
+
+            if (settlements.length === 0) {
+                container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-6 text-teal-700 bg-teal-50 rounded-lg border border-teal-100">
+                    <i class="fa-solid fa-check-circle text-3xl mb-2"></i>
+                    <p class="font-bold">All settled up!</p>
+                </div>
+            `;
+                return;
+            }
+
+            container.innerHTML = settlements.map(s => `
+            <div class="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition">
+                <div class="flex items-center space-x-3 flex-1">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-sm">
+                        ${s.from.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-bold text-slate-900">${s.from}</span>
+                        <span class="text-xs text-gray-500 text-left">owes</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center px-4">
+                    <i class="fa-solid fa-arrow-right-long text-teal-400"></i>
+                </div>
+
+                <div class="flex items-center space-x-3 flex-1 justify-end">
+                    <div class="flex flex-col items-end">
+                        <span class="font-bold text-teal-700">₹${s.amount.toFixed(2)}</span>
+                        <span class="text-xs text-slate-900 font-medium font-bold">${s.to}</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
+                        ${s.to.charAt(0).toUpperCase()}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+        }
+    </script>
+</body>
+
+</html>
