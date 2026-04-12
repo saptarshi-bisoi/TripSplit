@@ -12,6 +12,10 @@ const TripView = () => {
 
   // Friend Input Form
   const [friendName, setFriendName] = useState('');
+  // Gap Fix #2: tabbed add-member UI
+  const [addMode, setAddMode] = useState('name'); // 'name' | 'email'
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [memberFeedback, setMemberFeedback] = useState({ text: '', type: '' }); // inline feedback, replaces alert()
 
   // Expense Input Form
   const [description, setDescription] = useState('');
@@ -45,7 +49,7 @@ const TripView = () => {
     const name = friendName.trim();
     if (!name) return;
     if (trip.members.includes(name)) {
-      alert("Friend already added!");
+      setMemberFeedback({ text: 'This name is already in the group.', type: 'error' });
       return;
     }
 
@@ -59,6 +63,7 @@ const TripView = () => {
         body: JSON.stringify({ name })
       });
       setFriendName('');
+      setMemberFeedback({ text: '', type: '' });
       fetchTripData();
     } catch (err) { console.error(err); }
   };
@@ -66,8 +71,8 @@ const TripView = () => {
   const handleRemoveFriend = async (name) => {
     const isInvolved = trip.expenses.some(e => e.payer === name || Object.keys(e.shares || {}).includes(name));
     if (isInvolved) {
-        alert("Cannot remove. This friend is involved in an expense.");
-        return;
+      setMemberFeedback({ text: `Cannot remove ${name} — they are involved in an expense.`, type: 'error' });
+      return;
     }
     try {
       await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips/${tripId}/members`, {
@@ -78,8 +83,35 @@ const TripView = () => {
         },
         body: JSON.stringify({ name })
       });
+      setMemberFeedback({ text: '', type: '' });
       fetchTripData();
     } catch (err) { console.error(err); }
+  };
+
+  // Gap Fix #2: invite a registered user by email
+  const handleInvite = async () => {
+    const email = inviteEmail.trim();
+    if (!email) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/trips/${tripId}/invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMemberFeedback({ text: `${data.memberName} has been added to the group!`, type: 'success' });
+        setInviteEmail('');
+        fetchTripData();
+      } else {
+        setMemberFeedback({ text: data.message, type: 'error' });
+      }
+    } catch (err) {
+      setMemberFeedback({ text: 'Something went wrong. Please try again.', type: 'error' });
+    }
   };
 
   const handleAddExpense = async () => {
@@ -164,12 +196,57 @@ const TripView = () => {
             {/* ADD FRIEND CARD */}
             <div className="bg-white border border-gray-100 rounded-lg p-6 shadow-md transition">
               <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center">
-                 <i className="fa-solid fa-user-plus text-[#00786f] mr-3"></i> Add Friend
+                 <i className="fa-solid fa-user-plus text-[#00786f] mr-3"></i> Add Member
               </h2>
-              <div className="flex justify-between space-x-3 mb-4">
-                <input type="text" value={friendName} onChange={e => setFriendName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddFriend()} placeholder="Enter friend's name" className="flex-1 w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-teal-700 transition" />
-                <button onClick={handleAddFriend} className="bg-teal-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-[#156868] transition">Add</button>
+
+              {/* Gap Fix #2: Tab selector — By Name | Invite by Email */}
+              <div className="flex border-b border-gray-200 mb-4">
+                <button
+                  onClick={() => { setAddMode('name'); setMemberFeedback({ text: '', type: '' }); }}
+                  className={`flex-1 py-2 text-sm font-bold transition ${
+                    addMode === 'name'
+                      ? 'text-teal-700 border-b-2 border-teal-700'
+                      : 'text-gray-400 border-b-2 border-transparent hover:text-gray-600'
+                  }`}
+                >
+                  By Name
+                </button>
+                <button
+                  onClick={() => { setAddMode('email'); setMemberFeedback({ text: '', type: '' }); }}
+                  className={`flex-1 py-2 text-sm font-bold transition ${
+                    addMode === 'email'
+                      ? 'text-teal-700 border-b-2 border-teal-700'
+                      : 'text-gray-400 border-b-2 border-transparent hover:text-gray-600'
+                  }`}
+                >
+                  <i className="fa-solid fa-envelope mr-1.5"></i> Invite by Email
+                </button>
               </div>
+
+              {addMode === 'name' ? (
+                <div className="flex justify-between space-x-3 mb-3">
+                  <input type="text" value={friendName} onChange={e => setFriendName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddFriend()} placeholder="Enter friend's name" className="flex-1 w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-teal-700 transition" />
+                  <button onClick={handleAddFriend} className="bg-teal-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-[#156868] transition">Add</button>
+                </div>
+              ) : (
+                <div className="flex justify-between space-x-3 mb-3">
+                  <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleInvite()} placeholder="friend@email.com" className="flex-1 w-full border-2 border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:border-teal-700 transition" />
+                  <button onClick={handleInvite} className="bg-teal-700 text-white font-bold py-2 px-6 rounded-lg shadow-md hover:bg-[#156868] transition">Invite</button>
+                </div>
+              )}
+
+              {/* Inline feedback message — replaces all alert() calls */}
+              {memberFeedback.text && (
+                <p className={`text-sm mb-3 font-medium px-3 py-2 rounded-lg ${
+                  memberFeedback.type === 'error'
+                    ? 'text-red-600 bg-red-50 border border-red-100'
+                    : 'text-teal-700 bg-teal-50 border border-teal-100'
+                }`}>
+                  <i className={`fa-solid ${memberFeedback.type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-check'} mr-2`}></i>
+                  {memberFeedback.text}
+                </p>
+              )}
+
               <div className="flex flex-wrap gap-2">
                  {friends.map((f, i) => (
                     <span key={i} className="inline-flex items-center bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1 rounded-full text-sm font-medium shadow-sm">
@@ -177,7 +254,7 @@ const TripView = () => {
                         <button onClick={() => handleRemoveFriend(f)} className="ml-2 text-teal-500 hover:text-teal-800 transition">x</button>
                     </span>
                  ))}
-                 {friends.length === 0 && <span className="text-xs text-gray-400 italic">No friends added yet.</span>}
+                 {friends.length === 0 && <span className="text-xs text-gray-400 italic">No members added yet.</span>}
               </div>
             </div>
 

@@ -30,9 +30,11 @@ router.post('/login', async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) return res.status(400).json({ message: 'Invalid credentials' });
 
+    // Gap Fix #2: include email in payload so trip routes can query memberEmails without a DB hit
+    // Gap Fix #3: no fallback — server.js startup guard ensures JWT_SECRET is always set
     const token = jwt.sign(
-      { userId: user._id }, 
-      process.env.JWT_SECRET || 'tripsplit_secret_key', 
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 

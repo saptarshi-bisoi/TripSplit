@@ -25,6 +25,7 @@ const AuthPage = ({ isLogin }) => {
         if (isLogin) {
           localStorage.setItem('token', data.token);
           localStorage.setItem('userName', data.user.name);
+          localStorage.setItem('userId', data.user.id); // Gap Fix #2: needed for "Shared" badge in Dashboard
           navigate('/dashboard');
         } else {
           navigate('/login');

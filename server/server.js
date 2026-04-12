@@ -3,6 +3,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+// ── Gap Fix #3: Refuse to start without a real JWT secret ─────────────────
+if (!process.env.JWT_SECRET) {
+  console.error('[TripSplit] FATAL: JWT_SECRET environment variable is not set. Refusing to start.');
+  process.exit(1);
+}
+
 const app = express();
 
 app.use(cors());

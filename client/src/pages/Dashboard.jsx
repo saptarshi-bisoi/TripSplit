@@ -12,6 +12,7 @@ const Dashboard = () => {
   
   const navigate = useNavigate();
   const userName = localStorage.getItem('userName') || 'User';
+  const userId = localStorage.getItem('userId'); // Gap Fix #2: used to identify owned vs shared trips
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -58,6 +59,7 @@ const Dashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userName');
+    localStorage.removeItem('userId'); // Gap Fix #2: clear userId on logout
     navigate('/login');
   };
 
@@ -135,7 +137,13 @@ const Dashboard = () => {
                 return (
                   <div key={trip._id} className="bg-[#ffffff] rounded-xl p-5 break-inside-avoid shadow-sm border border-[#e2e8f0]">
                     <div className="flex justify-between items-center mb-5">
-                       <h3 className="text-xl font-bold text-[#0f172a] truncate cursor-pointer hover:underline" onClick={() => navigate(`/trips/${trip._id}`)}>{trip.name}</h3>
+                       <div className="flex items-center gap-2 min-w-0">
+                         <h3 className="text-xl font-bold text-[#0f172a] truncate cursor-pointer hover:underline" onClick={() => navigate(`/trips/${trip._id}`)}>{trip.name}</h3>
+                         {/* Gap Fix #2: badge for trips shared with (but not owned by) this user */}
+                         {trip.owner !== userId && (
+                           <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-500 rounded-full border border-indigo-100">Shared</span>
+                         )}
+                       </div>
                        <div className="flex space-x-2 text-gray-500">
                           {/* Toggle Settlements */}
                           <button onClick={() => toggleTab(trip._id)} title="Toggle Settlements" className={`w-8 h-8 rounded flex items-center justify-center transition ${isSettlementsView ? 'bg-[#00786f] text-white' : 'hover:bg-[#ccfbf1]'}`}>
